@@ -3,65 +3,56 @@
 
 \outerlist{
     \entrymidlist[\textbullet]
-    {Mono-depth estimation with camera parameter}{Naver Clova, Jul. 2020 {\textendash} Aug. 2020}{
-        \innerlist{
-            \entry{Depth estimation by structure from motion using camera parameters}
-        }
-    }
-
-    \entrymidlist[\textbullet]
     {Fisheye object detection and tracking}{CVLab, Jun. 2019 {\textendash} Feb. 2020}{
         \innerlist{
-            \entry{Object detection and tracking in large FOV fisheye lens}
-            \entry{Export using LibTorch C++ and quantization for embedded device}
+            \entry{Designed and developed a tool for ground-truths 3d annotation boxes from a large FOV fisheye lens environment.}
+            \entry{Optimized object detection and tracking in large FOV fisheye lens environments using proposed dilated warping convolution which stack of dilated convolutions and warping layers.}
+            \entry{Improved inference speed using model quantizations and frameworks(ONNX, TensorFlow Lite, Libtorch) for use in embedded systems such as \link{https://developer.nvidia.com/embedded/jetson-modules}{NVIDIA Jetson\textsuperscript{\texttrademark}}.}
         }
     }
 
     \entrymidlist[\textbullet]
     {Webtoon Annotation Tool}{Naver Webtoon, Sep. 2018 {\textendash} Feb. 2019}{
         \innerlist{
-            \entry{Webpage based 2D bounding box and tag annotation tool}
-            \entry{Manage dataset model with various custom query types}
+            \entry{Designed and developed of annotation tools for on-demand collection of raw data from new domains}
+            \entry{Implement quick model serving pipeline for visualize comparison to ground-truths and see the difference with newly collected.}
+            \entry{Implement analysis tool for cross-validation between annotators and tracking productivity for check the difficulty.}
+            \entry{Implemented to collect tags corresponding to various query types that can be transformed.}
         }
     }
-
-    \entrymidlist[\textbullet]
-    {Visual QA workshop paper}{Naver Webtoon, Sep. 2018 {\textendash} Feb. 2019}{
-        \innerlist{
-            \entry{Implement multi-modal network for baseline of visual QA tasks}
-        }
-    }
-
 
     \entrymidlist[\textbullet]
     {\link{https://github.com/jiunbae/ITE4065/wiki/Project4}{MariaDB Scalable Lock Manager}}{ITE4065 at Hanyang University, 2018}{
         \innerlist{
-            \entry{Improved lock manager to work without locks}
-            \entry{Reusable object pool with garbage collector}
+            \entry{Remove performance degradation of InnoDB storage engine which using global lock for transaction record managing using replace lock manager to lock-free linked list.}
+            \entry{Improve performance by distinguish physical-free, logical-free in garbage collection phase and re-allocate used transaction using re-useable object pool.}
         }
     }
 
     \entrymidlist[\textbullet]
     {\link{https://www.slideshare.net/baejiun/memento-78483474}{Memento: all information about that person}}{SW Maestro, 2017}{
         \innerlist{
-            \entry{Scalable crawling service for new and web doucuments}
+            \entry{Designed and developed a scalable crawling service that can crawl multiple types of documents.}
             \entry{Word vector embedding and clustering continuous data}
-            \entry{Named entity recognition, Emotion recognition and Morphological analysis}
+            \entry{Implement document embedding system that vectorize document using doc2vec, cluster it based on unique events in time sequence and able to quickly merge with appended data.}
+            \entry{Implement named entity recognition, emotion recognition and morphological analysis}
         }
     }
 
     \entrymidlist[\textbullet]
-    {\link{https://www.slideshare.net/baejiun/deep-check}{DeepCheck: Deep learning-based face recognition attendance check}}{SW Maestro, 2017}{
+    {\link{https://www.slideshare.net/baejiun/deep-check}{DeepCheck: Deep learning-based auto face recognition attendance check}}{SW Maestro, 2017}{
         \innerlist{
-            \entry{YOLO based face detection model enhancement}
-            \entry{React Native app and python flask API server}
+            \entry{Improve the model based on YOLO, collected data and fine-tuned with hyper-parameter tuning the model to recognize faces in large-scale, low-resolution crowded environment.}
+            \entry{Improved the model based on VGG Face using few-shot learning to recognize detected faces as each user.}
+            \entry{As a technical challenge, made a cross-platform app based on React Native.}
+            \entry{Developed API server using \link{https://flask.palletsprojects.com/}{Flask}, serve lightweight model inference.}
         }
     }
     
-    \entrymidlist[\textbullet]
-    {\link{http://aikorea.org/cs231n/}{CS231n KR Translate}}{contribution, 2015}{
-        \innerlist{
-            \entry{English to Korean translation project for the notes and assignments of CS231n, Stanford}
-        }
-    }
+    % \entrymidlist[\textbullet]
+    % {\link{http://aikorea.org/cs231n/}{CS231n KR Translate}}{contribution, 2015}{
+    %     \innerlist{
+    %         \entry{English to Korean translation project for the notes and assignments of CS231n, Stanford}
+    %     }
+    % }
 }
