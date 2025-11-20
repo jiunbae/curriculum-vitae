@@ -2,6 +2,17 @@
 
 \documentclass[letterpaper,11pt]{article}
 
+% Language conditional commands
+\providecommand{\LANG}{en}  % Default language is English
+\usepackage{ifthen}
+\newcommand{\ifen}[1]{\ifthenelse{\equal{\LANG}{en}}{#1}{}}
+\newcommand{\ifko}[1]{\ifthenelse{\equal{\LANG}{ko}}{#1}{}}
+
+% Korean language support
+\ifthenelse{\equal{\LANG}{ko}}{
+    \usepackage{kotex}  % Korean support for XeLaTeX/LuaLaTeX
+}{}
+
 % Choose bibliography style for formatting list of publications
 \usepackage[backend=biber, defernumbers, maxnames=20, sorting=ynt]{biblatex}
 % \addbibresource{cv.bib}
@@ -37,7 +48,7 @@
 
 \import{styles/sections/}{projects.tex}
 \import{styles/sections/}{awards.tex}
-\import{styles/sections/}{activites.tex}
+\import{styles/sections/}{activities.tex}
 
 % \pagebreak
 
