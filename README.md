@@ -1,13 +1,18 @@
 # Curriculum Vitae
 
+[![Build and Release CV](https://github.com/jiunbae/curriculum-vitae/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/jiunbae/curriculum-vitae/actions/workflows/build-and-release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/jiunbae/curriculum-vitae)](https://github.com/jiunbae/curriculum-vitae/releases/latest)
+
 Bilingual CV supporting both English and Korean versions.
 
 ## Download
 
-- English: [cv_en.pdf](https://raw.githubusercontent.com/jiunbae/curriculum-vitae/master/build/cv_en.pdf)
-- Korean: [cv_ko.pdf](https://raw.githubusercontent.com/jiunbae/curriculum-vitae/master/build/cv_ko.pdf)
+📥 **Latest Version:** [Releases](https://github.com/jiunbae/curriculum-vitae/releases/latest)
 
-Last Update: 2024-11-21
+- English: `cv_en.pdf`
+- Korean: `cv_ko.pdf`
+
+> PDFs are automatically built and released via GitHub Actions when a new version tag is pushed.
 
 ## Building
 
@@ -60,3 +65,21 @@ latexmk -xelatex -outdir=build cv_ko.tex
 - Automatic content synchronization between versions
 - Clean separation of build artifacts into `build/` directory
 - Easy-to-use Makefile for building
+- **Automated CI/CD**: GitHub Actions automatically builds and releases PDFs on version tags
+
+## Automated Releases
+
+This repository uses GitHub Actions to automatically build and release PDFs when you push a version tag:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The workflow will:
+1. Build both English and Korean PDFs
+2. Create a new GitHub release
+3. Upload the PDFs as release assets
+
+For more details, see [.github/workflows/README.md](.github/workflows/README.md)

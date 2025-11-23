@@ -1,0 +1,62 @@
+name: Build and Release CV
+
+on:
+  push:
+    tags:
+      - 'v*'  # v1.0.0, v2.0.0 등 태그 푸시 시 실행
+    branches:
+      - main  # main 브랜치 푸시 시에도 빌드 (릴리스는 태그에만)
+  pull_request:
+    branches:
+      - main  # PR 시에도 빌드 검증
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install TeX Live
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra latexmk fonts-noto-cjk biber
+
+    - name: Build CV PDFs
+      run: make all
+
+    - name: List generated files
+      run: ls -lh build/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cv-pdfs
+        path: |
+          build/cv_en.pdf
+          build/cv_ko.pdf
+        retention-days: 90
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          build/cv_en.pdf
+          build/cv_ko.pdf
+        body: |
+          # Curriculum Vitae - ${{ github.ref_name }}
+
+          **English Version:** `cv_en.pdf`
+          **Korean Version (한국어):** `cv_ko.pdf`
+
+          ---
+
+          🤖 자동 생성된 릴리스입니다.
+
+          이 릴리스는 Git 태그 `${{ github.ref_name }}`에서 자동으로 빌드되었습니다.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
