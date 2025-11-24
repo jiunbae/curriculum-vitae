@@ -21,7 +21,9 @@ jobs:
     - name: Install TeX Live
       run: |
         sudo apt-get update
-        sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra latexmk fonts-noto-cjk biber
+        # 한국어 문서를 빌드하려면 kotex.sty가 필요한데, 기본 세트에 포함되어 있지 않다.
+        # texlive-lang-korean 패키지를 추가로 설치해 kotex 관련 스타일 파일을 제공한다.
+        sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra texlive-lang-korean latexmk fonts-noto-cjk biber
 
     - name: Build CV PDFs
       run: make all
