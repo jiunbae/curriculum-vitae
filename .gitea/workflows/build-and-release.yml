@@ -1,0 +1,140 @@
+name: Build and Release CV
+
+# GitHub Actions is retired for this repo; the build runs on the self-hosted
+# jiun-mini runner, where `ubuntu-latest` maps to catthehacker/ubuntu:act-latest.
+#
+# The release step calls api.github.com directly with GH_RELEASE_TOKEN, because
+# `secrets.GITHUB_TOKEN` on Gitea resolves to a *Gitea* token and would silently
+# target the wrong host. It skips (does not fail) when the secret is absent, so
+# the PDF build stays useful on its own.
+#
+# `pull_request` is dropped: mirrors are read-only and PRs live on GitHub, so
+# `workflow_dispatch` is the only re-run mechanism.
+
+on:
+  push:
+    tags:
+      - 'v*'  # v1.0.0, v2.0.0 등 태그 푸시 시 실행
+    branches:
+      - main  # main 브랜치 푸시 시에도 빌드 (릴리스는 태그에만)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install TeX Live
+      run: |
+        sudo apt-get update
+        # 한국어 문서를 빌드하려면 kotex.sty가 필요한데, 기본 세트에 포함되어 있지 않다.
+        # texlive-lang-korean 패키지를 추가로 설치해 kotex 관련 스타일 파일을 제공한다.
+        sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra texlive-lang-korean latexmk fonts-noto-cjk biber
+
+    - name: Build CV PDFs
+      run: make all
+
+    - name: List generated files
+      run: ls -lh build/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: cv-pdfs
+        path: |
+          build/cv_en.pdf
+          build/cv_ko.pdf
+        retention-days: 90
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      env:
+        GH_TOKEN: ${{ secrets.GH_RELEASE_TOKEN }}
+        TAG: ${{ github.ref_name }}
+      run: |
+        set -euo pipefail
+        if [ -z "${GH_TOKEN:-}" ]; then
+          echo "GH_RELEASE_TOKEN secret not set on this Gitea repo; skipping GitHub release."
+          exit 0
+        fi
+        REPO="jiunbae/curriculum-vitae"
+        TMP="$(mktemp -d)"
+        trap 'rm -rf -- "$TMP"' EXIT
+
+        api() {
+          # api <method> <url> <outfile> [curl args...]
+          local method="$1" url="$2" out="$3"; shift 3
+          curl --silent --show-error --location \
+            --output "$out" --write-out '%{http_code}' \
+            -X "$method" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "$@" "$url"
+        }
+
+        BODY=$(cat <<EOF
+        # Curriculum Vitae - $TAG
+
+        **English Version:** \`cv_en.pdf\`
+        **Korean Version (한국어):** \`cv_ko.pdf\`
+
+        ---
+
+        🤖 자동 생성된 릴리스입니다.
+
+        이 릴리스는 Git 태그 \`$TAG\`에서 자동으로 빌드되었습니다.
+        EOF
+        )
+
+        STATUS="$(api GET "https://api.github.com/repos/$REPO/releases/tags/$TAG" "$TMP/release.json")"
+        case "$STATUS" in
+          200)
+            echo "release $TAG already exists; reusing it for asset upload."
+            ;;
+          404)
+            PAYLOAD="$(jq -nc --arg tag "$TAG" --arg body "$BODY" \
+              '{tag_name:$tag,name:$tag,body:$body,draft:false,prerelease:false}')"
+            STATUS="$(api POST "https://api.github.com/repos/$REPO/releases" "$TMP/release.json" \
+              -H "Content-Type: application/json" --data "$PAYLOAD")"
+            if [ "$STATUS" != 201 ]; then
+              echo "GitHub release creation failed with HTTP $STATUS" >&2
+              jq -r '.message // "Invalid JSON error response"' "$TMP/release.json" >&2 || true
+              exit 1
+            fi
+            ;;
+          *)
+            echo "GitHub release lookup failed with HTTP $STATUS" >&2
+            jq -r '.message // "Invalid JSON error response"' "$TMP/release.json" >&2 || true
+            exit 1
+            ;;
+        esac
+
+        RID="$(jq -er --arg tag "$TAG" \
+          'select((.id | type) == "number" and .id > 0 and .tag_name == $tag) | .id' \
+          "$TMP/release.json")" || {
+            echo "GitHub release response lacks a valid id/tag_name" >&2
+            exit 1
+          }
+        UPLOAD_URL="https://uploads.github.com/repos/$REPO/releases/$RID/assets"
+
+        for f in build/cv_en.pdf build/cv_ko.pdf; do
+          [ -f "$f" ] || { echo "expected asset is missing: $f" >&2; exit 1; }
+          name="$(basename "$f")"
+          STATUS="$(api POST "$UPLOAD_URL?name=$name" "$TMP/upload.json" \
+            -H "Content-Type: application/pdf" --data-binary "@$f")"
+          if [ "$STATUS" = 422 ] && \
+             jq -e '.errors[]? | select(.code == "already_exists")' "$TMP/upload.json" >/dev/null; then
+            echo "↩ asset $name already attached to $TAG"
+            continue
+          fi
+          if [ "$STATUS" != 201 ]; then
+            echo "GitHub asset upload for '$name' failed with HTTP $STATUS" >&2
+            jq -r '.message // "Invalid JSON error response"' "$TMP/upload.json" >&2 || true
+            exit 1
+          fi
+          jq -er '.browser_download_url' "$TMP/upload.json"
+        done
