@@ -30,10 +30,31 @@ jobs:
 
     - name: Install TeX Live
       run: |
-        sudo apt-get update
+        set -euo pipefail
+        # The runner host corrupts bytes in transit intermittently — it has shown
+        # up as `bad record mac` on curl, `tls: bad record MAC` in buildkit, and
+        # here as apt `Hash Sum mismatch` on a texlive-fonts-extra .deb. This step
+        # pulls roughly 2GB, which makes it the most exposed apt call in the fleet.
+        # Nothing in a workflow fixes the host; retry around it, and drop both apt
+        # caches in between — a corrupt .deb sits in /var/cache/apt/archives and a
+        # plain retry would just re-read it.
+        apt_try() {
+          for attempt in 1 2 3 4; do
+            if "$@"; then
+              return 0
+            fi
+            echo "apt attempt $attempt failed; clearing caches, retrying in $((attempt * 10))s" >&2
+            sudo rm -rf /var/lib/apt/lists/*
+            sudo apt-get clean
+            sleep $((attempt * 10))
+          done
+          echo "apt gave up after 4 attempts: $*" >&2
+          return 1
+        }
+        apt_try sudo apt-get update
         # 한국어 문서를 빌드하려면 kotex.sty가 필요한데, 기본 세트에 포함되어 있지 않다.
         # texlive-lang-korean 패키지를 추가로 설치해 kotex 관련 스타일 파일을 제공한다.
-        sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra texlive-lang-korean latexmk fonts-noto-cjk biber
+        apt_try sudo apt-get install -y texlive-xetex texlive-fonts-extra texlive-latex-extra texlive-lang-korean latexmk fonts-noto-cjk biber
 
     - name: Build CV PDFs
       run: make all
